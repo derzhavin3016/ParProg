@@ -1,12 +1,20 @@
-macro(AddDefTarget name)
-  # Define target name as variable
-  set(TAR ${name})
-
+macro(UpdTarList NEW_TAR)
   # Append target name to targets list
   # & propagate updated list to parent scope
-  list(APPEND TARGETS ${TAR})
+  list(APPEND TARGETS ${NEW_TAR})
   set(TARGETS ${TARGETS} PARENT_SCOPE)
+endmacro()
+
+macro(AddDefTarget NAME)
+  # Define target name as variable
+  set(TAR ${NAME})
+  
+  UpdTarList(${NAME})
 
   # Create new target w/ given name
-  add_executable(${TAR} ${TAR}.c)
+  if(${ARGC} GREATER 1)
+    add_executable(${TAR} ${ARGN})
+  else()
+    add_executable(${TAR} ${TAR}.c)
+  endif()
 endmacro()
