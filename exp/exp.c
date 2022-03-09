@@ -23,7 +23,7 @@ int main( int argc, char *argv[] )
   if (argc >= 2)
   {
     if (rank == 0)
-      printf("e = %.*Lf\n", LDBL_DIG - 1,finalize(commsize));
+      printf("e = %.*Lf\n", LDBL_DIG - 1, finalize(commsize));
     else
       calc_sum(rank, atoi(argv[1]), commsize);
   }
@@ -51,14 +51,18 @@ void calc_sum(int rank, uint N, int commsize)
 {
   ldbl part = 0.0;
 
-  uint work_amount = N / commsize;
+  uint work_amount = N / (commsize - 1);
   uint start_i = work_amount * (rank - 1);
   
   if (rank == commsize - 1)
-    work_amount += N % commsize;
+    work_amount += N % (commsize - 1);
 
-  for (uint i = start_i, end_i = start_i + work_amount; i < end_i; ++i)
-    part += 1.0 / fact(i);
+  ldbl term_i = 1 / fact(start_i);
+  for (uint i = start_i, end_i = start_i + work_amount; i < end_i;)
+  {
+    part += term_i;
+    term_i /= ++i;
+  }
 
 
   MPI_Send(&part, 1, MPI_LONG_DOUBLE, 0, 0, MPI_COMM_WORLD);
