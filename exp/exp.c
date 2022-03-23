@@ -1,6 +1,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <float.h>
 
 typedef unsigned uint;
@@ -23,11 +24,16 @@ int main( int argc, char *argv[] )
   if (argc >= 2)
   {
     if (rank == 0)
-      printf("e = %.*Lf\n", LDBL_DIG - 1, finalize(commsize));
+    {
+      ldbl res = finalize(commsize);
+      printf("e = %.*Lf\n", LDBL_DIG - 1, res);
+      printf("<math.h> M_E = %.*lf\n", DBL_DIG - 1, M_E);
+      printf("|e - M_E| = %.*Lf\n", LDBL_DIG - 1, fabsl(res - M_E));
+    }
     else
-      calc_sum(rank, atoi(argv[1]), commsize);
+      calc_sum(rank, atoi(argv[1]), commsize - 1);
   }
-  else
+  else if (rank == 0)
     printf("USAGE: %s AMOUNT_OF_TERMS\n", argv[0]);
 
   MPI_Finalize();
@@ -51,11 +57,11 @@ void calc_sum(int rank, uint N, int commsize)
 {
   ldbl part = 0.0;
 
-  uint work_amount = N / (commsize - 1);
+  uint work_amount = N / commsize;
   uint start_i = work_amount * (rank - 1);
   
-  if (rank == commsize - 1)
-    work_amount += N % (commsize - 1);
+  if (rank == commsize)
+    work_amount += N % commsize;
 
   ldbl term_i = 1 / fact(start_i);
   for (uint i = start_i, end_i = start_i + work_amount; i < end_i;)
