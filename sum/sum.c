@@ -12,7 +12,7 @@ void calc_sum(int rank, uint N, int commsize)
   uint work_amount = N / commsize;
   uint start_i = work_amount * (rank - 1) + 1;
   
-  if (rank == commsize - 1)
+  if (rank == commsize)
     work_amount += N % commsize;
 
   for (uint i = start_i, end_i = start_i + work_amount; i < end_i; ++i)
@@ -48,9 +48,9 @@ int main( int argc, char *argv[] )
     if (rank == 0)
       printf("sum = %Lf\n", finalize(commsize));
     else
-      calc_sum(rank, atoi(argv[1]), commsize);
+      calc_sum(rank, atoi(argv[1]), commsize - 1);
   }
-  else
+  else if (rank == 0)
     printf("USAGE: %s AMOUNT_OF_SUM_ELEMS\n", argv[0]);
 
   MPI_Finalize();
