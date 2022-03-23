@@ -26,5 +26,9 @@ foreach(TARGET IN LISTS TARGETS)
 
   target_compile_options(${TARGET} PRIVATE -Wall -Wextra -Wpedantic)
   target_compile_features(${TARGET} PRIVATE c_std_11)
+
+  set_target_properties(${TARGET}
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/")
 endforeach()
 
