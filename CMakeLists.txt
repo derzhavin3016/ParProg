@@ -3,7 +3,7 @@ project(ParProg)
 
 find_package(MPI REQUIRED)
 
-set(DIRS exp hello ring sum)
+set(DIRS exp hello ring sum lab1)
 
 include(cmake/def_add_ex.cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -21,11 +21,11 @@ string(REPLACE ";" ", " MSG_STR "${TARGETS}")
 message(STATUS "Collected targets: ${MSG_STR}")
 
 foreach(TARGET IN LISTS TARGETS)
-  target_include_directories(${TARGET} PRIVATE SYSTEM ${MPI_INCLUDE_PATH})
-  target_link_libraries(${TARGET} PRIVATE ${MPI_C_LIBRARIES})
+  target_include_directories(${TARGET} PRIVATE SYSTEM ${MPI_CXX_INCLUDE_PATH})
+  target_link_libraries(${TARGET} PRIVATE ${MPI_CXX_LIBRARIES})
 
   target_compile_options(${TARGET} PRIVATE -Wall -Wextra -Wpedantic)
-  target_compile_features(${TARGET} PRIVATE c_std_11)
+  target_compile_features(${TARGET} PRIVATE cxx_std_17)
 
   set_target_properties(${TARGET}
     PROPERTIES
