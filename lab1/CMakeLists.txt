@@ -1,4 +1,2 @@
-AddDefTarget(lab1_seq)
-target_link_libraries(lab1_seq PRIVATE m)
-
-AddDefTarget(lab1_par)
+AddDefTarget(lab1)
+target_link_libraries(lab1 PRIVATE m)
