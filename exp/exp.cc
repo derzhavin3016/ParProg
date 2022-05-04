@@ -5,12 +5,13 @@
 #include <time.h>
 #include <float.h>
 
-typedef unsigned uint;
-typedef long double ldbl;
-enum DATA_TAGS
+using uint = unsigned;
+using ldbl = long double;
+
+enum class DATA : int
 {
-  DATA_SUM,
-  DATA_LTERM
+  SUM,
+  LTERM
 };
 
 void calc_sum(int rank, uint N, int commsize);
@@ -19,11 +20,10 @@ ldbl finalize(uint commsize);
 
 int main(int argc, char *argv[])
 {
-  int rank = 0, commsize = 0;
-  MPI_Init(&argc, &argv);
+  MPI::Init(argc, argv);
 
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &commsize);
+  auto rank = MPI::COMM_WORLD.Get_rank();
+  auto commsize = MPI::COMM_WORLD.Get_size();
 
   if (argc >= 2)
   {
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
   else if (rank == 0)
     printf("USAGE: %s NUM_OF_LAST_TERM\n", argv[0]);
 
-  MPI_Finalize();
+  MPI::Finalize();
 }
 
 ldbl finalize(uint commsize)
@@ -56,8 +56,8 @@ ldbl finalize(uint commsize)
   for (uint rank = 1; rank < commsize; ++rank)
   {
     ldbl cur_res = 0.0, last_term = 0.0;
-    MPI_Recv(&cur_res, 1, MPI_LONG_DOUBLE, rank, DATA_SUM, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_Recv(&last_term, 1, MPI_LONG_DOUBLE, rank, DATA_LTERM, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI::COMM_WORLD.Recv(&cur_res, 1, MPI::LONG_DOUBLE, rank, (int)DATA::SUM);
+    MPI::COMM_WORLD.Recv(&last_term, 1, MPI::LONG_DOUBLE, rank, (int)DATA::LTERM);
 
     result += cur_res * cur_fact;
     cur_fact *= last_term;
@@ -83,6 +83,6 @@ void calc_sum(int rank, uint N, int commsize)
     part += term;
   }
 
-  MPI_Send(&part, 1, MPI_LONG_DOUBLE, 0, DATA_SUM, MPI_COMM_WORLD);
-  MPI_Send(&term, 1, MPI_LONG_DOUBLE, 0, DATA_LTERM, MPI_COMM_WORLD);
+  MPI::COMM_WORLD.Send(&part, 1, MPI::LONG_DOUBLE, 0, (int)DATA::SUM);
+  MPI::COMM_WORLD.Send(&term, 1, MPI::LONG_DOUBLE, 0, (int)DATA::LTERM);
 }

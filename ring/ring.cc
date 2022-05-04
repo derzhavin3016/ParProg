@@ -1,6 +1,6 @@
 #include <mpi.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 typedef unsigned uint;
 typedef long double ldbl;
@@ -17,9 +17,9 @@ void do_zero(uint msg, uint commsize)
   if (commsize == 1)
     dst = from = 0;
 
-  MPI_Send(&msg, 1, MPI_UNSIGNED, dst, 0, MPI_COMM_WORLD);
+  MPI::COMM_WORLD.Send(&msg, 1, MPI::UNSIGNED, dst, 0);
 
-  MPI_Recv(&msg, 1, MPI_UNSIGNED, from, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  MPI::COMM_WORLD.Recv(&msg, 1, MPI::UNSIGNED, from, 0);
   print_status(++msg, 0);
 }
 
@@ -34,22 +34,19 @@ void ring_msg(uint msg, int rank, uint commsize)
   uint from_rank = rank - 1;
   uint to_rank = (uint)rank == commsize - 1 ? 0 : rank + 1;
   uint cur_msg = 0;
-  MPI_Recv(&cur_msg, 1, MPI_UNSIGNED, from_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  MPI::COMM_WORLD.Recv(&cur_msg, 1, MPI::UNSIGNED, from_rank, 0);
 
   print_status(++cur_msg, rank);
 
-  MPI_Send(&cur_msg, 1, MPI_UNSIGNED, to_rank, 0, MPI_COMM_WORLD);
+  MPI::COMM_WORLD.Send(&cur_msg, 1, MPI::UNSIGNED, to_rank, 0);
 }
 
 int main( int argc, char *argv[] )
 {
-  int rank = 0, commsize = 0;
-  MPI_Init(&argc, &argv);
-  setbuf(stdout, NULL);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &commsize);
+  MPI::Init(argc, argv);
+  std::setbuf(stdout, nullptr);
 
-  ring_msg(0, rank, commsize);
+  ring_msg(0, MPI::COMM_WORLD.Get_rank(), MPI::COMM_WORLD.Get_size());
 
-  MPI_Finalize();
+  MPI::Finalize();
 }
