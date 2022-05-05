@@ -18,3 +18,8 @@ macro(AddDefTarget NAME)
     add_executable(${TAR} ${TAR}.cc)
   endif()
 endmacro()
+
+macro(AddDefPthTar NAME)
+  AddDefTarget(${NAME} ${ARGN})
+  target_link_libraries(${NAME} PRIVATE Threads::Threads)
+endmacro()

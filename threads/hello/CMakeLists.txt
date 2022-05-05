@@ -1,0 +1,1 @@
+AddDefPthTar(hello_pth hello)
