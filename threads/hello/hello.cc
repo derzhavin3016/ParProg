@@ -23,12 +23,14 @@ struct ThInfo
 
 int main(int argc, char *argv[])
 {
-  if (argc != 2) {
+  if (argc != 2)
+  {
     std::cout << "USAGE: " << argv[0] << " num_threads" << std::endl;
     return 0;
   }
   NUM_THREADS = std::atoi(argv[1]);
-  if (NUM_THREADS <= 0) {
+  if (NUM_THREADS <= 0)
+  {
     std::cerr << "Amount of threads must be positive" << std::endl;
     return -1;
   }

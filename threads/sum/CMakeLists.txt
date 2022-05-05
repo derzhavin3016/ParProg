@@ -1,0 +1,1 @@
+AddDefPthTar(sum_pth sum)
