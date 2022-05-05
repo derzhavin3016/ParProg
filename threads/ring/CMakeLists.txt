@@ -1,0 +1,1 @@
+AddDefPthTar(ring_pth ring)

@@ -1,6 +1,6 @@
 find_package(Threads REQUIRED)
 
-set(SDIRS hello sum)
+set(SDIRS hello sum ring)
 foreach(DIR ${SDIRS})
   add_subdirectory(${DIR})
 endforeach()
