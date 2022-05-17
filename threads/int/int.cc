@@ -3,6 +3,7 @@
 #include <future>
 #include <algorithm>
 #include <thread>
+#include <limits>
 #include <cmath>
 
 using ldbl = long double;
@@ -21,18 +22,16 @@ constexpr ldbl A = 0.001;
 constexpr ldbl B = 1;
 constexpr ldbl PI = 3.14159265358979323846;
 constexpr ldbl PI2 = 2 * PI;
-constexpr std::uint64_t PER_AMOUNT = (1 / A - 1 / B) / PI2;
+constexpr ldbl PER_RAT_AMOUNT = (1 / A - 1 / B) / PI2;
+constexpr std::uint64_t PER_AMOUNT = static_cast<std::uint64_t>(PER_RAT_AMOUNT);
+constexpr ldbl PER_DIFF = PER_RAT_AMOUNT - PER_AMOUNT;
 
 inline ldbl run_simp(ldbl a, ldbl b, ldbl step)
 {
-  std::uint64_t steps = (b - a) / step;
-  ldbl res = 0, start = a;
+  ldbl res = 0;
 
-  for (std::uint64_t i = 0; i < steps; ++i)
-  {
+  for (ldbl start = a; start <= b - step; start += step)
     res += do_simp(start, start + step);
-    start += step;
-  }
 
   return res;
 }
@@ -63,13 +62,18 @@ int main(int argc, char *argv[])
   }
 
   auto num_threads = std::atoi(argv[1]);
+  if (num_threads <= 0)
+  {
+    std::cerr << "Incorrect threads amount" << std::endl;
+    return -1;
+  }
   if (num_threads > static_cast<decltype(num_threads)>(std::thread::hardware_concurrency()))
   {
     std::cerr << "Too many threads" << std::endl;
     return -1;
   }
 
-  ldbl accuracy = std::atof(argv[2]);
+  ldbl accuracy = std::abs(std::atof(argv[2]));
   if (accuracy >= 1)
   {
     std::cerr << "Accuracy is too big" << std::endl;
@@ -82,16 +86,15 @@ int main(int argc, char *argv[])
   ths.reserve(num_threads);
 
   auto p_per_thread = PER_AMOUNT / num_threads;
-  ldbl inv_start = 1 / A, inv_end = inv_start - PI2 * (p_per_thread + PER_AMOUNT % num_threads);
-  inv_end = std::max(inv_end, B);
-  std::cout << inv_start << " " << inv_end << std::endl;
+  ldbl inv_start = 1 / A, inv_end = inv_start - PI2 * (p_per_thread + PER_AMOUNT % num_threads + PER_DIFF);
+  inv_end = std::max(inv_end, 1 / B);
   ldbl res = 0;
 
   for (std::size_t i = 0; i < ths.capacity(); ++i)
   {
     std::promise<ldbl> prom;
     auto fut = prom.get_future();
-    auto &&th = std::thread(run_thread, std::move(prom), 1 / inv_start, 1 / inv_end, accuracy);
+    auto &&th = std::thread(run_thread, std::move(prom), 1 / inv_start, 1 / inv_end, accuracy / (num_threads * num_threads));
 
     ths.emplace_back(std::move(th), std::move(fut));
 
@@ -106,6 +109,7 @@ int main(int argc, char *argv[])
     thv.first.join();
   }
 
+  std::cout.precision(6);//std::numeric_limits<ldbl>::max_digits10);
   std::cout << "I = " << res << std::endl;
 
   return 0;

@@ -3,7 +3,7 @@ project(ParProg)
 
 find_package(MPI REQUIRED)
 
-set(DIRS exp hello ring sum lab1 threads)
+set(DIRS exp hello ring sum lab1 threads matr)
 
 include(cmake/def_add_ex.cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
