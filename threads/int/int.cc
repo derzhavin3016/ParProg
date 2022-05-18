@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <future>
+#include <chrono>
 #include <algorithm>
 #include <thread>
 #include <limits>
@@ -67,11 +68,12 @@ int main(int argc, char *argv[])
     std::cerr << "Incorrect threads amount" << std::endl;
     return -1;
   }
+  /*
   if (num_threads > static_cast<decltype(num_threads)>(std::thread::hardware_concurrency()))
   {
     std::cerr << "Too many threads" << std::endl;
     return -1;
-  }
+  }*/
 
   ldbl accuracy = std::abs(std::atof(argv[2]));
   if (accuracy >= 1)
@@ -90,6 +92,7 @@ int main(int argc, char *argv[])
   inv_end = std::max(inv_end, 1 / B);
   ldbl res = 0;
 
+  auto tic = std::chrono::high_resolution_clock::now();
   for (std::size_t i = 0; i < ths.capacity(); ++i)
   {
     std::promise<ldbl> prom;
@@ -108,9 +111,13 @@ int main(int argc, char *argv[])
     res += thv.second.get();
     thv.first.join();
   }
+  auto toc = std::chrono::high_resolution_clock::now();
 
   std::cout.precision(6);//std::numeric_limits<ldbl>::max_digits10);
   std::cout << "I = " << res << std::endl;
+
+  auto mil = std::chrono::duration_cast<std::chrono::milliseconds>(toc - tic).count();
+  std::cout << "Elapsed time " << mil << "ms" << std::endl;
 
   return 0;
 }
