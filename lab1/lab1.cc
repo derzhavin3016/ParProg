@@ -61,6 +61,9 @@ int main(int argc, char *argv[])
   auto rank = static_cast<std::uint64_t>(MPI::COMM_WORLD.Get_rank());
   auto commsize = static_cast<std::uint64_t>(MPI::COMM_WORLD.Get_size());
 
+  MPI::COMM_WORLD.Barrier();
+  auto tic = MPI::Wtime();
+
   for (auto row_id = rank; row_id < Nt; row_id += commsize)
   {
     for (std::uint64_t i = 1; i < Nx; ++i)
@@ -108,9 +111,13 @@ int main(int argc, char *argv[])
       break;
   }
 
+  MPI::COMM_WORLD.Barrier();
+  auto toc = MPI::Wtime();
+
 
   if (rank == 0)
   {
+    std::cout << "Elapsed time " << toc - tic << " s." << std::endl;
     std::string name = argc > 1 ? argv[1] : "res.txt";
     std::ofstream f(name);
     print_res(f, res);
