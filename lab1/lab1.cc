@@ -86,9 +86,11 @@ int main(int argc, char *argv[])
   }
 
   std::vector<ldbl> res;
-  auto Nt_filled = Nt + commsize - Nt % commsize;
+  // Fill Nt in a way that commsize becomes it's factor
+  auto Nt_filled = Nt + (commsize - Nt % commsize) % commsize;
   if (rank == 0) res.resize(Nt_filled * Nx);
 
+  // Dummy vector for free processors
   std::vector<ldbl> empty(Nx, 0);
 
   for (auto row_id = rank; row_id < Nt_filled; row_id += commsize)
