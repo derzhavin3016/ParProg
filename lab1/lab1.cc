@@ -8,7 +8,7 @@
 
 using ldbl = long double;
 
-constexpr ldbl a = 1;
+constexpr ldbl a = 2;
 constexpr ldbl h = 1e-3;
 constexpr ldbl tau = 1e-3;
 constexpr ldbl T = 1;
@@ -19,7 +19,7 @@ constexpr ldbl PI = 3.14159265358979323846;
 
 ldbl f(ldbl x, ldbl t)
 {
-  return t * x;
+  return t + x;
 }
 
 ldbl phi(ldbl x)
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
                              static_cast<int>(rank ? rank - 1 : commsize - 1),
                              static_cast<int>(i));
 
-        auto f_val = f((i + 0.5) * h, (row_id - 0.5) * tau);
+        auto f_val = f((i - 0.5) * h, (row_id - 0.5) * tau);
         matr[row_id][i] = matr[row_id - 1][i] + matr[row_id - 1][i - 1] - matr[row_id][i - 1] -
                 a * tau / h * (-matr[row_id][i - 1] + matr[row_id - 1][i] - matr[row_id - 1][i - 1]) +
                 2 * tau * f_val;
