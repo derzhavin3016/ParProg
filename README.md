@@ -1,5 +1,5 @@
 # ParProg
-Task from parallel programming course from 6th semester
+Task from parallel programming course from 6th & 7th semesters
 
 ## hello
 
@@ -24,5 +24,3 @@ Calculate value of euler constant using Taylor formula up to N-th term (passes t
 ### exp (hard version)
 Calculate value of euler constant using Taylor formula with accuracy of N-th order (passes through args), might requires long arithmetic
 > in progress
-
-

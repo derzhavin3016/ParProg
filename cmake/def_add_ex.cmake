@@ -8,7 +8,7 @@ endmacro()
 macro(AddDefTarget NAME)
   # Define target name as variable
   set(TAR ${NAME})
-  
+
   UpdTarList(${NAME})
 
   # Create new target w/ given name
@@ -22,4 +22,9 @@ endmacro()
 macro(AddDefPthTar NAME)
   AddDefTarget(${NAME} ${ARGN})
   target_link_libraries(${NAME} PRIVATE Threads::Threads)
+endmacro()
+
+macro(AddDefOmpTar NAME)
+  AddDefTarget(${NAME} ${ARGN})
+  target_link_libraries(${NAME} PRIVATE OpenMP::OpenMP_CXX)
 endmacro()

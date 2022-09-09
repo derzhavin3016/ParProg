@@ -3,7 +3,7 @@ project(ParProg)
 
 find_package(MPI REQUIRED)
 
-set(DIRS exp hello ring sum lab1 threads matr)
+set(DIRS exp hello ring sum lab1 threads omp)
 
 include(cmake/def_add_ex.cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -31,4 +31,3 @@ foreach(TARGET IN LISTS TARGETS)
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/")
 endforeach()
-
