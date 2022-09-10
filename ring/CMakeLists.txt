@@ -1,1 +1,0 @@
-AddDefTarget(ring)

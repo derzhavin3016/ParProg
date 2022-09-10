@@ -1,0 +1,1 @@
+AddDefMpiTar(sum)
