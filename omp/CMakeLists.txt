@@ -1,6 +1,6 @@
 find_package(OpenMP REQUIRED)
 
-set(SDIRS hello)
+set(SDIRS hello sum)
 foreach(DIR ${SDIRS})
   add_subdirectory(${DIR})
 endforeach()
