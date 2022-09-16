@@ -1,6 +1,6 @@
 find_package(OpenMP REQUIRED)
 
-set(SDIRS hello sum seq nested)
+SUBDIRLIST(SDIRS ${CMAKE_CURRENT_SOURCE_DIR})
 foreach(DIR ${SDIRS})
   add_subdirectory(${DIR})
 endforeach()

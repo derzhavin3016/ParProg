@@ -1,6 +1,6 @@
 find_package(Threads REQUIRED)
 
-set(SDIRS hello sum ring attrs int)
+SUBDIRLIST(SDIRS ${CMAKE_CURRENT_SOURCE_DIR})
 foreach(DIR ${SDIRS})
   add_subdirectory(${DIR})
 endforeach()
