@@ -1,8 +1,10 @@
 #include <cstdio>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <omp.h>
 #include <numeric>
+#include <limits>
 
 using uint = unsigned;
 using ldbl = long double;
@@ -43,17 +45,16 @@ int main( int argc, char *argv[] )
     return 1;
   }
 
-  auto num_threads = 4;omp_get_max_threads();
+  auto num_threads = omp_get_max_threads();
   std::vector<ldbl> parts(num_threads);
 
-#pragma omp parallel num_threads(4)
+#pragma omp parallel num_threads(num_threads)
   {
     auto th_id = omp_get_thread_num();
-    parts[th_id] = calc_sum(th_id, num_terms, num_threads - 1);
-    std::cout << parts[th_id] << std::endl;
+    parts[th_id] = calc_sum(th_id + 1, num_terms, num_threads);
   }
 
   auto sum = std::accumulate(parts.begin(), parts.end(), ldbl(0));
 
-  std::cout << sum << std::endl;
+  std::cout << "sum = " << std::setprecision(7) << sum << std::endl;
 }
