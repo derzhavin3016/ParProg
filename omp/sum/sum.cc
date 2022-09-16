@@ -46,15 +46,13 @@ int main( int argc, char *argv[] )
   }
 
   auto num_threads = omp_get_max_threads();
-  std::vector<ldbl> parts(num_threads);
+  ldbl sum = 0;
 
-#pragma omp parallel num_threads(num_threads)
+#pragma omp parallel num_threads(num_threads) reduction(+:sum)
   {
     auto th_id = omp_get_thread_num();
-    parts[th_id] = calc_sum(th_id + 1, num_terms, num_threads);
+    sum += calc_sum(th_id + 1, num_terms, num_threads);
   }
-
-  auto sum = std::accumulate(parts.begin(), parts.end(), ldbl(0));
 
   std::cout << "sum = " << std::setprecision(7) << sum << std::endl;
 }
