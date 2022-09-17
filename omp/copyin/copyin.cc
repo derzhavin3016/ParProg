@@ -10,22 +10,26 @@
 uint importantCounter = 0;
 #pragma omp threadprivate(importantCounter)
 
+void print_thread(uint cnt)
+{
+  std::ostringstream ss;
+  ss << "Thread " << omp_get_thread_num() << " importantCounter = " << cnt << std::endl;
+
+  std::cout << ss.str();
+}
+
 int main()
 {
   importantCounter = 3;
-  #pragma omp parallel //copyin(importantCounter)
-  {
-    #pragma omp master
-      importantCounter += 228;
 
-    importantCounter += omp_get_thread_num();
+#if defined(WITH_COPYIN)
+  std::cout << "Copyin case:\n";
+  #pragma omp parallel copyin(importantCounter)
+#else
+  std::cout << "No copyin case:\n";
+  #pragma omp parallel
+#endif
+    print_thread(importantCounter);
 
-    std::ostringstream ss;
-    ss << "Thread " << omp_get_thread_num() << " importantCounter = " << importantCounter << std::endl;
-
-    std::cout << ss.str();
-  }
-
-  std::cout << "At end " << importantCounter << std::endl;
-
+  std::cout << "At end " << importantCounter << std::endl << std::endl;
 }

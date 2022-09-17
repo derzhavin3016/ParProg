@@ -1,1 +1,3 @@
+AddDefOmpTar(copyin_omp_enable copyin)
+target_compile_definitions(copyin_omp_enable PRIVATE WITH_COPYIN)
 AddDefOmpTar(copyin_omp copyin)
