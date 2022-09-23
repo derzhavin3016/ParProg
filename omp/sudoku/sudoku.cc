@@ -122,12 +122,14 @@ bool solveSudoku(Field &field, int depth = 1)
   if (!free)
     return true;
 
+  bool solved = false;
+
   auto coord = free.value();
   for (size_t num = 1; num <= FIELD_SIZE; ++num)
   {
     if (!isSetOk(field, coord, num))
       continue;
-    #pragma omp task firstprivate()
+    #pragma omp task final(depth > 1) shared(solved, field)
     {
       auto copy = field;
       copy[coord.first][coord.second] = num;
@@ -136,13 +138,13 @@ bool solveSudoku(Field &field, int depth = 1)
       {
         assert(field != copy);
         field = copy;
-        return true;
+        solved = true;
       }
     }
   }
 
   #pragma omp taskwait
-  return false;
+  return solved;
 }
 
 int main()
@@ -152,9 +154,9 @@ int main()
 
 
   bool res = false;
-  #pragma omp parallel sections
-  #pragma omp single nowait
+  #pragma omp parallel
   {
+    #pragma omp single nowait
     res = solveSudoku(field);
   }
   if (res)

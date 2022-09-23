@@ -8,17 +8,18 @@
 
 int main()
 {
-  #pragma omp parallel
+  omp_set_nested(1);
+  #pragma omp parallel num_threads(3)
   {
     auto threads1 = omp_get_num_threads();
     auto id1 = omp_get_thread_num();
 
-    #pragma omp parallel
+    #pragma omp parallel num_threads(2)
     {
       auto threads2 = omp_get_num_threads();
       auto id2 = omp_get_thread_num();
 
-      #pragma omp parallel
+      #pragma omp parallel num_threads(2)
       {
         auto threads3 = omp_get_num_threads();
         auto id3 = omp_get_thread_num();
