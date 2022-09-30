@@ -11,17 +11,22 @@
 #error "This program requires OpenMP library"
 #endif
 
-constexpr size_t CELL_SIZE = 3;
+constexpr size_t CELL_SIZE = 4;
 constexpr size_t MAX_NUM_W = 2;
 constexpr size_t FIELD_SIZE = CELL_SIZE * CELL_SIZE;
 using Field = std::array<std::array<size_t, FIELD_SIZE>, FIELD_SIZE>;
 using Coord = std::pair<size_t, size_t>;
 
-void fillField(Field &field)
+bool fillField(Field &field)
 {
   for (auto &row : field)
     for (auto &num : row)
+    {
       std::cin >> num;
+      if (std::cin.bad() || num > FIELD_SIZE)
+        return false;
+    }
+  return true;
 }
 
 void printFiller()
@@ -147,11 +152,38 @@ bool solveSudoku(Field &field, int depth = 1)
   return solved;
 }
 
-int main()
+bool isValid(const Field &field)
 {
-  Field field{};
-  fillField(field);
+  auto cpy = field;
+  for (size_t i = 0; i < cpy.size(); ++i)
+    for (size_t j = 0; j < cpy[i].size(); ++j)
+    {
+      auto &relem = cpy[i][j];
+      auto elem = relem;
 
+      relem = 0;
+      if (!isSetOk(cpy, {i, j}, elem))
+      {
+        std::cerr << "Error in " << i << " " << j << '=' << elem << std::endl;
+        return false;
+      }
+      relem = elem;
+    }
+
+  return true;
+}
+
+int main(int argc, char *argv[])
+{
+  if (argc == 2)
+    omp_set_num_threads(std::atoi(argv[1]));
+
+  Field field{};
+  if (!fillField(field))
+  {
+    std::cerr << "Input error\n";
+    return 1;
+  }
 
   bool res = false;
   #pragma omp parallel
@@ -160,7 +192,10 @@ int main()
     res = solveSudoku(field);
   }
   if (res)
+  {
     printField(field);
+    assert(isValid(field));
+  }
   else
     std::cout << "The solution does not exist.\n";
 }
