@@ -32,7 +32,7 @@ bool fillField(Field &field)
 void printFiller()
 {
   for (size_t i = 0, end = FIELD_SIZE * (MAX_NUM_W + 1) + 2 + CELL_SIZE;
-       i != end; ++i)
+      i != end; ++i)
     std::cout << '-';
   std::cout << std::endl;
 }
@@ -98,14 +98,33 @@ bool isSetOk(const Field &field, const Coord &coord, size_t num)
 {
   assert(num > 0 && num <= FIELD_SIZE);
 
-  Coord upper_left = {
-    (coord.first / CELL_SIZE) * CELL_SIZE,
-    (coord.second / CELL_SIZE) * CELL_SIZE,
-  };
+  auto [row_id, col_id] = coord;
 
-  return !findInRow(field, coord.first, num) &&
-         !findInCol(field, coord.second, num) &&
-         !findInCell(field, upper_left, num);
+  assert(col_id < FIELD_SIZE && row_id < FIELD_SIZE);
+
+  Coord upper_left = {
+    (row_id / CELL_SIZE) * CELL_SIZE,
+    (col_id / CELL_SIZE) * CELL_SIZE,
+  };
+  assert(upper_left.first % CELL_SIZE == 0 && upper_left.second % CELL_SIZE == 0);
+
+  for (size_t i = 0; i < FIELD_SIZE; ++i)
+  {
+    // check current row
+    if (field[row_id][i] == num)
+      return false;
+
+    // check current col
+    if (field[i][col_id] == num)
+      return false;
+
+    // check current cell
+    auto x = i % CELL_SIZE;
+    auto y = i / CELL_SIZE;
+    if (field[upper_left.first + x][upper_left.second + y] == num)
+      return false;
+  }
+  return true;
 }
 
 std::optional<Coord> findFree(const Field &field)
@@ -130,20 +149,22 @@ bool solveSudoku(Field &field, int depth = 1)
   bool solved = false;
 
   auto coord = free.value();
+  #pragma omp taskloop final(depth > 2) shared(solved, field)
   for (size_t num = 1; num <= FIELD_SIZE; ++num)
   {
-    if (!isSetOk(field, coord, num))
-      continue;
-    #pragma omp task final(depth > 1) shared(solved, field)
+    if (isSetOk(field, coord, num))
     {
       auto copy = field;
       copy[coord.first][coord.second] = num;
 
       if (solveSudoku(copy, depth + 1))
       {
-        assert(field != copy);
-        field = copy;
-        solved = true;
+        #pragma omp critical
+        {
+          field = copy;
+          solved = true;
+        }
+        #pragma omp cancel taskgroup
       }
     }
   }
@@ -184,12 +205,18 @@ int main(int argc, char *argv[])
     std::cerr << "Input error\n";
     return 1;
   }
+  std::cout << "Input done\n";
 
   bool res = false;
+  double dt = 0;
   #pragma omp parallel
   {
     #pragma omp single nowait
-    res = solveSudoku(field);
+    {
+      dt = omp_get_wtime();
+      res = solveSudoku(field);
+      dt = omp_get_wtime() - dt;
+    }
   }
   if (res)
   {
@@ -198,4 +225,6 @@ int main(int argc, char *argv[])
   }
   else
     std::cout << "The solution does not exist.\n";
+
+  std::cout << "Executed in " << dt << " sec\n";
 }
