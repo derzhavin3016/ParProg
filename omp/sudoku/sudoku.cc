@@ -1,11 +1,11 @@
-#include <iostream>
-#include <iomanip>
-#include <sstream>
+#include <algorithm>
 #include <array>
 #include <cassert>
-#include <optional>
-#include <algorithm>
+#include <iomanip>
+#include <iostream>
 #include <omp.h>
+#include <optional>
+#include <sstream>
 
 #if !defined(_OPENMP)
 #error "This program requires OpenMP library"
@@ -32,7 +32,7 @@ bool fillField(Field &field)
 void printFiller()
 {
   for (size_t i = 0, end = FIELD_SIZE * (MAX_NUM_W + 1) + 2 + CELL_SIZE;
-      i != end; ++i)
+       i != end; ++i)
     std::cout << '-';
   std::cout << std::endl;
 }
@@ -50,7 +50,8 @@ void printField(const Field &field)
                 << ((++col_cnt % CELL_SIZE == 0) ? " |" : " ");
     std::cout << std::endl;
 
-    if (++row_cnt % CELL_SIZE == 0) printFiller();
+    if (++row_cnt % CELL_SIZE == 0)
+      printFiller();
   }
 }
 
@@ -106,7 +107,8 @@ bool isSetOk(const Field &field, const Coord &coord, size_t num)
     (row_id / CELL_SIZE) * CELL_SIZE,
     (col_id / CELL_SIZE) * CELL_SIZE,
   };
-  assert(upper_left.first % CELL_SIZE == 0 && upper_left.second % CELL_SIZE == 0);
+  assert(upper_left.first % CELL_SIZE == 0 &&
+         upper_left.second % CELL_SIZE == 0);
 
   for (size_t i = 0; i < FIELD_SIZE; ++i)
   {
@@ -149,7 +151,7 @@ bool solveSudoku(Field &field, int depth = 1)
   bool solved = false;
 
   auto coord = free.value();
-  #pragma omp taskloop final(depth > 2) shared(solved, field)
+#pragma omp taskloop final(depth > 2) shared(solved, field)
   for (size_t num = 1; num <= FIELD_SIZE; ++num)
   {
     if (isSetOk(field, coord, num))
@@ -159,17 +161,17 @@ bool solveSudoku(Field &field, int depth = 1)
 
       if (solveSudoku(copy, depth + 1))
       {
-        #pragma omp critical
+#pragma omp critical
         {
           field = copy;
           solved = true;
         }
-        #pragma omp cancel taskgroup
+#pragma omp cancel taskgroup
       }
     }
   }
 
-  #pragma omp taskwait
+#pragma omp taskwait
   return solved;
 }
 
@@ -209,9 +211,9 @@ int main(int argc, char *argv[])
 
   bool res = false;
   double dt = 0;
-  #pragma omp parallel
+#pragma omp parallel
   {
-    #pragma omp single nowait
+#pragma omp single nowait
     {
       dt = omp_get_wtime();
       res = solveSudoku(field);
