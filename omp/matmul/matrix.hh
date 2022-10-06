@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <concepts>
 #include <iostream>
 
 namespace linal
@@ -93,9 +94,16 @@ public:
     return threshold;
   }
 
-  static bool IsZero(ldbl val)
+  template <std::floating_point fpT>
+  static bool IsZero(fpT val)
   {
     return std::abs(val) < threshold;
+  }
+
+  template <std::integral iT>
+  static bool IsZero(iT val)
+  {
+    return val == iT{0};
   }
 
   template <typename walk_func>
@@ -283,20 +291,10 @@ bool linal::Matrix<T>::IsEq(const Matrix &matr) const
   if (rows_ != matr.rows_ || cols_ != matr.cols_)
     return false;
 
-  if (std::is_arithmetic_v<T>)
-  {
-    for (size_t i = 0; i < rows_; ++i)
-      for (size_t j = 0; j < cols_; ++j)
-        if (!IsZero(matr_[i][j] - matr.matr_[i][j]))
-          return false;
-  }
-  else
-  {
-    for (size_t i = 0; i < rows_; ++i)
-      for (size_t j = 0; j < cols_; ++j)
-        if (!(matr_[i][j] == matr.matr_[i][j]))
-          return false;
-  }
+  for (size_t i = 0; i < rows_; ++i)
+    for (size_t j = 0; j < cols_; ++j)
+      if (!IsZero(matr_[i][j] - matr.matr_[i][j]))
+        return false;
   return true;
 }
 

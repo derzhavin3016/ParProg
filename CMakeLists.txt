@@ -19,7 +19,7 @@ message(STATUS "Collected targets: ${MSG_STR}")
 
 foreach(TARGET IN LISTS TARGETS)
   target_compile_options(${TARGET} PRIVATE -Wall -Wextra -Wpedantic)
-  target_compile_features(${TARGET} PRIVATE cxx_std_17)
+  target_compile_features(${TARGET} PRIVATE cxx_std_20)
 
   set_target_properties(${TARGET}
     PROPERTIES
