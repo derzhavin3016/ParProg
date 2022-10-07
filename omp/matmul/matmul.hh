@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <immintrin.h>
 #include <iostream>
 #include <omp.h>
 #include <random>
@@ -15,7 +16,7 @@
 namespace mul
 {
 
-using Mat = linal::Matrix<std::intmax_t>;
+using Mat = linal::Matrix<std::int32_t>;
 using MulFunc = Mat (*)(const Mat &, const Mat &);
 
 Mat mulNaive(const Mat &lhs, const Mat &rhs)
@@ -132,36 +133,53 @@ Mat mulOMP16xTransp(const Mat &lhs, const Mat &rhs)
   return res;
 }
 
-Mat mulOMP16xTranspIntr(const Mat &lhs, const Mat &rhs)
+std::int32_t hsum_epi32(__m128i x)
 {
-  std::size_t threads_num = omp_get_max_threads();
-  auto rhs_t = Mat{rhs.Transposing()};
-  auto res = Mat{lhs.getRows(), rhs.getCols()};
-  std::size_t nrows = res.getRows(), ncols = res.getCols(),
-              com_sz = lhs.getCols(), end_k = com_sz - com_sz % 8,
-              th_block = nrows / threads_num + 1;
+  auto hi64 = _mm_unpackhi_epi32(x, x);
+  auto sum64 = _mm_add_epi32(hi64, x);
+  auto hi32 = _mm_shuffle_epi32(sum64, _MM_SHUFFLE(2, 3, 0, 1));
+  auto sum32 = _mm_add_epi32(sum64, hi32);
+  return _mm_cvtsi128_si32(sum32);
+}
 
-#pragma omp parallel num_threads(threads_num)
-  {
-    std::size_t ti = omp_get_thread_num();
+std::int32_t hsum_8x32(__m256i x)
+{
+  auto sum128 =
+    _mm_add_epi32(_mm256_castsi256_si128(x), _mm256_extracti128_si256(x, 1));
+  return hsum_epi32(sum128);
+}
 
-    for (std::size_t i = ti * th_block;
-         i < std::min((ti + 1) * th_block, nrows); ++i)
-      for (std::size_t j = 0; j < ncols; ++j)
+Mat mulProm8xTranspIntr(const Mat &lhs, const Mat &rhs)
+{
+  Mat rhs_t{rhs.Transposing()};
+  Mat res{lhs.getRows(), rhs.getCols()};
+
+  std::size_t res_c = res.getCols(), res_r = res.getRows(),
+              com_sz = lhs.getCols(), end_k = com_sz - com_sz % 8;
+
+  for (std::size_t i = 0; i < res_r; ++i)
+    for (std::size_t j = 0; j < res_c; ++j)
+    {
+      auto lptr = lhs[i];
+      auto rptr = rhs_t[j];
+      std::size_t k = 0;
+      for (; k < end_k; k += 8)
       {
-        auto lptr = lhs[i];
-        auto rptr = rhs_t[j];
-        std::size_t k = 0;
-        for (; k < end_k; k += 8)
-          res[i][j] += lptr[k] * rptr[k] + lptr[k + 1] * rptr[k + 1] +
-                       lptr[k + 2] * rptr[k + 2] + lptr[k + 3] * rptr[k + 3] +
-                       lptr[k + 4] * rptr[k + 4] + lptr[k + 5] * rptr[k + 5] +
-                       lptr[k + 6] * rptr[k + 6] + lptr[k + 7] * rptr[k + 7];
+        auto lhs_v =
+          _mm256_set_epi32(lptr[k], lptr[k + 1], lptr[k + 2], lptr[k + 3],
+                           lptr[k + 4], lptr[k + 5], lptr[k + 6], lptr[k + 7]);
+        auto rhs_v =
+          _mm256_set_epi32(rptr[k], rptr[k + 1], rptr[k + 2], rptr[k + 3],
+                           rptr[k + 4], rptr[k + 5], rptr[k + 6], rptr[k + 7]);
 
-        for (; k < com_sz; ++k)
-          res[i][j] += lptr[k] * rptr[k];
+        auto mul_v = _mm256_mullo_epi32(lhs_v, rhs_v);
+
+        res[i][j] += hsum_8x32(mul_v);
       }
-  }
+
+      for (; k < com_sz; ++k)
+        res[i][j] += lptr[k] * rptr[k];
+    }
 
   return res;
 }

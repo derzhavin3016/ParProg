@@ -32,17 +32,22 @@ int CompareWays()
   std::cout << res.second << " ms" << std::endl;
   assert(res.first == answ);
 
+  std::cout << "OMP promp 8 + transpose + temp vars + SIMD\n";
+  res = mul::Measure(mat1, mat2, mul::mulProm8xTranspIntr);
+  std::cout << res.second << " ms" << std::endl;
+  assert(res.first == answ);
+
   return 0;
 }
 
 template <std::forward_iterator It>
 int VarSize(It beg, It end,
-            std::pair<std::intmax_t, std::intmax_t> range_rnd = {0, 10})
+            std::pair<std::int32_t, std::int32_t> range_rnd = {0, 10})
 {
   std::random_device dev{};
   std::mt19937_64 gen(dev());
 
-  std::uniform_int_distribution<std::intmax_t> dist(range_rnd.first,
+  std::uniform_int_distribution<std::int32_t> dist(range_rnd.first,
                                                     range_rnd.second);
   auto &&rand_fill = [&dist, &gen](int, int) { return dist(gen); };
   struct Point

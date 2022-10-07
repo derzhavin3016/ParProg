@@ -5,6 +5,7 @@
 int main()
 {
   auto max_threads = omp_get_max_threads();
+  std::cout << omp_get_num_devices() << std::endl;
 
 #pragma omp parallel
   {

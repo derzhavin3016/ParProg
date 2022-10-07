@@ -75,7 +75,15 @@ public:
     return cols_ == 0 || rows_ == 0;
   }
 
-  ~Matrix();
+  ~Matrix()
+  {
+    for (size_t i = 0; i < rows_; ++i)
+      delete[] matr_[i];
+
+    delete[] matr_;
+    matr_ = nullptr;
+    rows_ = cols_ = 0;
+  }
 
   bool IsEq(const Matrix &matr) const;
 
@@ -272,17 +280,6 @@ const T &linal::Matrix<T>::At(size_t i, size_t j) const
     throw std::out_of_range{"Col index is too big"};
 
   return matr_[i][j];
-}
-
-template <typename T>
-linal::Matrix<T>::~Matrix()
-{
-  for (size_t i = 0; i < rows_; ++i)
-    delete[] matr_[i];
-
-  delete[] matr_;
-  matr_ = nullptr;
-  rows_ = cols_ = 0;
 }
 
 template <typename T>
