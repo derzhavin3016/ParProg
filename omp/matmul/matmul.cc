@@ -12,6 +12,9 @@ int CompareWays()
     return -1;
   }
 
+  std::cout << "Matrix sizes: " << mat1.getRows() << " " << mat1.getCols()
+            << " " << mat2.getCols() << std::endl;
+
   std::cout << "Naive impl\n";
   auto res = mul::Measure(mat1, mat2, mul::mulNaive);
   std::cout << res.second << " ms" << std::endl;
@@ -47,6 +50,11 @@ int CompareWays()
   std::cout << res.second << " ms" << std::endl;
   assert(res.first == answ);
 
+  std::cout << "Strassen OMP\n";
+  res = mul::Measure(mat1, mat2, mul::mulStrassenOMP);
+  std::cout << res.second << " ms" << std::endl;
+  assert(res.first == answ);
+
   return 0;
 }
 
@@ -58,7 +66,7 @@ int VarSize(It beg, It end,
   std::mt19937_64 gen(dev());
 
   std::uniform_int_distribution<std::int32_t> dist(range_rnd.first,
-                                                    range_rnd.second);
+                                                   range_rnd.second);
   auto &&rand_fill = [&dist, &gen](int, int) { return dist(gen); };
   struct Point
   {
