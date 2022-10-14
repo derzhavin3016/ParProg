@@ -240,6 +240,56 @@ Mat mulOmpProm8xTranspIntr(const Mat &lhs, const Mat &rhs)
   return res;
 }
 
+Mat mulStrassen(const Mat &lhs, const Mat &rhs)
+{
+  std::size_t res_c = rhs.getCols(), res_r = lhs.getRows(),
+              com_sz = lhs.getCols();
+
+  if (res_c != res_r || com_sz != res_r || res_c % 2 != 0)
+  {
+    std::cout << "Incorrect matrix for Strassen, skipped\n";
+    return mulOMP16xTransp(lhs, rhs);
+  }
+
+  auto mul_fnc = &mulProm16xTransp;
+
+  Mat lhs11, lhs12, lhs21, lhs22;
+  Mat rhs11, rhs12, rhs21, rhs22;
+  lhs.splitByFour(lhs11, lhs12, lhs21, lhs22);
+  rhs.splitByFour(rhs11, rhs12, rhs21, rhs22);
+
+  auto M1 = mul_fnc(lhs11 + lhs22, rhs11 + rhs22);
+  auto M2 = mul_fnc(lhs21 + lhs22, rhs11);
+  auto M3 = mul_fnc(lhs11, rhs12 - rhs22);
+  auto M4 = mul_fnc(lhs22, rhs21 - rhs11);
+  auto M5 = mul_fnc(lhs11 + lhs12, rhs22);
+  auto M6 = mul_fnc(lhs21 - lhs11, rhs11 + rhs12);
+  auto M7 = mul_fnc(lhs12 - lhs22, rhs21 + rhs22);
+
+  auto res11 = M1 + M4 - M5 + M7;
+  auto res12 = M3 + M5;
+  auto res21 = M2 + M4;
+  auto res22 = M1 - M2 + M3 + M6;
+
+  auto half_sz = res_c / 2;
+
+  Mat res(res_r, res_c,
+          [half_sz, &res11, &res12, &res22, &res21](auto i, auto j) {
+            bool iless = i < half_sz;
+            bool jless = j < half_sz;
+
+            if (iless && jless)
+              return res11[i][j];
+            if (iless && !jless)
+              return res12[i][j - half_sz];
+            if (!iless && jless)
+              return res21[i - half_sz][j];
+            return res22[i - half_sz][j - half_sz];
+          });
+
+  return res;
+}
+
 std::pair<Mat, linal::ldbl> Measure(const Mat &lhs, const Mat &rhs,
                                     MulFunc func)
 {

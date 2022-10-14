@@ -43,6 +43,23 @@ public:
   // move
   Matrix &operator=(Matrix &&matr);
 
+  Matrix &operator+=(const Matrix &matr)
+  {
+    for (std::size_t i = 0; i < rows_; ++i)
+      for (std::size_t j = 0; j < cols_; ++j)
+        matr_[i][j] += matr.matr_[i][j];
+
+    return *this;
+  }
+  Matrix &operator-=(const Matrix &matr)
+  {
+    for (std::size_t i = 0; i < rows_; ++i)
+      for (std::size_t j = 0; j < cols_; ++j)
+        matr_[i][j] -= matr.matr_[i][j];
+
+    return *this;
+  }
+
   Matrix &Transpose();
 
   Matrix Transposing() const;
@@ -73,6 +90,25 @@ public:
   bool empty() const
   {
     return cols_ == 0 || rows_ == 0;
+  }
+
+  void splitByFour(Matrix &a11, Matrix &a12, Matrix &a21, Matrix &a22) const
+  {
+    if (cols_ != rows_ || cols_ % 2 != 0)
+      return;
+
+    auto half_size = cols_ / 2;
+    a11 = Matrix(half_size, half_size,
+                 [this](auto i, auto j) { return matr_[i][j]; });
+    a12 = Matrix(half_size, half_size, [this, half_size](auto i, auto j) {
+      return matr_[i][j + half_size];
+    });
+    a21 = Matrix(half_size, half_size, [this, half_size](auto i, auto j) {
+      return matr_[i + half_size][j];
+    });
+    a22 = Matrix(half_size, half_size, [this, half_size](auto i, auto j) {
+      return matr_[i + half_size][j + half_size];
+    });
   }
 
   ~Matrix()
@@ -401,6 +437,24 @@ std::istream &linal::InputQuadr(std::istream &ist, Matrix<T> &matr)
                    }};
 
   return ist;
+}
+
+template <typename T>
+linal::Matrix<T> operator+(const linal::Matrix<T> &lhs,
+                           const linal::Matrix<T> &rhs)
+{
+  auto res = lhs;
+  res += rhs;
+  return res;
+}
+
+template <typename T>
+linal::Matrix<T> operator-(const linal::Matrix<T> &lhs,
+                           const linal::Matrix<T> &rhs)
+{
+  auto res = lhs;
+  res -= rhs;
+  return res;
 }
 
 template <typename InputIt, typename T>

@@ -42,6 +42,11 @@ int CompareWays()
   std::cout << res.second << " ms" << std::endl;
   assert(res.first == answ);
 
+  std::cout << "Strassen\n";
+  res = mul::Measure(mat1, mat2, mul::mulStrassen);
+  std::cout << res.second << " ms" << std::endl;
+  assert(res.first == answ);
+
   return 0;
 }
 
