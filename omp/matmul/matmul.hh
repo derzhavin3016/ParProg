@@ -133,22 +133,6 @@ Mat mulOMP16xTransp(const Mat &lhs, const Mat &rhs)
   return res;
 }
 
-std::int32_t hsum_epi32(__m128i x)
-{
-  auto hi64 = _mm_unpackhi_epi32(x, x);
-  auto sum64 = _mm_add_epi32(hi64, x);
-  auto hi32 = _mm_shuffle_epi32(sum64, _MM_SHUFFLE(2, 3, 0, 1));
-  auto sum32 = _mm_add_epi32(sum64, hi32);
-  return _mm_cvtsi128_si32(sum32);
-}
-
-std::int32_t hsum_8x32(__m256i x)
-{
-  auto sum128 =
-    _mm_add_epi32(_mm256_castsi256_si128(x), _mm256_extracti128_si256(x, 1));
-  return hsum_epi32(sum128);
-}
-
 Mat mulProm8xTranspIntr(const Mat &lhs, const Mat &rhs)
 {
   Mat rhs_t{rhs.Transposing()};
@@ -160,25 +144,39 @@ Mat mulProm8xTranspIntr(const Mat &lhs, const Mat &rhs)
   for (std::size_t i = 0; i < res_r; ++i)
     for (std::size_t j = 0; j < res_c; ++j)
     {
-      auto lptr = lhs[i];
-      auto rptr = rhs_t[j];
+      const auto lptr = lhs[i];
+      const auto rptr = rhs_t[j];
+
+      auto lp_intr = reinterpret_cast<const __m256i *>(lptr);
+      auto rp_intr = reinterpret_cast<const __m256i *>(rptr);
+
       std::size_t k = 0;
+      auto sum = _mm256_setzero_si256();
       for (; k < end_k; k += 8)
       {
-        auto lhs_v =
-          _mm256_set_epi32(lptr[k], lptr[k + 1], lptr[k + 2], lptr[k + 3],
-                           lptr[k + 4], lptr[k + 5], lptr[k + 6], lptr[k + 7]);
-        auto rhs_v =
-          _mm256_set_epi32(rptr[k], rptr[k + 1], rptr[k + 2], rptr[k + 3],
-                           rptr[k + 4], rptr[k + 5], rptr[k + 6], rptr[k + 7]);
+        auto lhs_v = _mm256_loadu_si256(lp_intr++);
+        auto rhs_v = _mm256_loadu_si256(rp_intr++);
 
         auto mul_v = _mm256_mullo_epi32(lhs_v, rhs_v);
 
-        res[i][j] += hsum_8x32(mul_v);
+        sum = _mm256_add_epi32(sum, mul_v);
       }
 
+      auto swp128 = _mm256_permute2x128_si256(sum, sum, 1);
+      auto sum128 = _mm256_castsi256_si128(_mm256_add_epi32(sum, swp128));
+
+      auto swp64 = _mm_shuffle_epi32(sum128, _MM_SHUFFLE(1, 0, 3, 2));
+      auto sum64 = _mm_add_epi32(swp64, sum128);
+
+      auto swp32 = _mm_shuffle_epi32(sum64, _MM_SHUFFLE2(0, 1));
+      auto sum32 = _mm_add_epi32(swp32, sum64);
+
+      std::int32_t res_sum = _mm_cvtsi128_si32(sum32);
+
       for (; k < com_sz; ++k)
-        res[i][j] += lptr[k] * rptr[k];
+        res_sum += lptr[k] * rptr[k];
+
+      res[i][j] = res_sum;
     }
 
   return res;
