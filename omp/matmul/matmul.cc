@@ -32,8 +32,13 @@ int CompareWays()
   std::cout << res.second << " ms" << std::endl;
   assert(res.first == answ);
 
-  std::cout << "Prom 4 + transpose + temp vars + SIMD\n";
+  std::cout << "Prom 8 + transpose + temp vars + SIMD\n";
   res = mul::Measure(mat1, mat2, mul::mulProm8xTranspIntr);
+  std::cout << res.second << " ms" << std::endl;
+  assert(res.first == answ);
+
+  std::cout << "OMP Prom 8 + transpose + temp vars + SIMD\n";
+  res = mul::Measure(mat1, mat2, mul::mulOmpProm8xTranspIntr);
   std::cout << res.second << " ms" << std::endl;
   assert(res.first == answ);
 
