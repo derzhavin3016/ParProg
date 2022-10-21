@@ -43,7 +43,10 @@ int main()
     return 1;
   }
 
+  std::cout << "Vec size: " << N << std::endl;
 
-  // PRINT_FFT(inp, ans, naiveFFT);
+  if (N <= 2048)
+    PRINT_FFT(inp, ans, naiveFFT);
   PRINT_FFT(inp, ans, ctFFT);
+  PRINT_FFT(inp, ans, ctParFFT);
 }

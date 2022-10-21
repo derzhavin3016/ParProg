@@ -117,6 +117,45 @@ inline Vec ctFFT(const Vec &inp)
   return res;
 }
 
+inline Vec ctParFFT(const Vec &inp)
+{
+  auto N = inp.size();
+  if (N == 2)
+    return {inp[0] + inp[1], inp[0] - inp[1]};
+
+  auto hN = N >> 1;
+  Vec even(hN);
+  Vec odd(hN);
+
+  for (std::size_t i = 0; i < hN; ++i)
+  {
+    even[i] = inp[2 * i];
+    odd[i] = inp[2 * i + 1];
+  }
+  Vec res_even, res_odd;
+
+#pragma omp parallel
+  {
+#pragma omp single nowait
+    {
+#pragma omp task
+      res_even = ctFFT(even);
+#pragma omp task
+      res_odd = ctFFT(odd);
+    }
+  }
+  Vec res(N);
+
+  for (std::size_t i = 0; i < hN; ++i)
+  {
+    auto wiN = calcRot(i, N);
+    res[i] = res_even[i] + wiN * res_odd[i];
+    res[i + hN] = res_even[i] - wiN * res_odd[i];
+  }
+
+  return res;
+}
+
 } // namespace fft
 
 #endif /* __OMP_FFT_FFT_HH__ */
