@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include <complex>
+#include <concepts>
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -39,12 +40,18 @@ bool isEq(Compl a, Compl b)
 void outputVec(const Vec &vec, std::ostream &ost = std::cout);
 void inputVec(Vec &vec, std::istream &ist = std::cin);
 
+inline Dbl runFFT(const Vec &inp, Vec &res, FFTfunc func)
+{
+  timer::Timer tim;
+  res = func(inp);
+  return tim.elapsed_mcs() / 1000.0l;
+}
+
 inline std::pair<Dbl, bool> testFFT(const Vec &inp, const Vec &ans,
                                     FFTfunc func)
 {
-  timer::Timer tim;
-  auto res = func(inp);
-  auto elapsed = tim.elapsed_mcs() / 1000.0l;
+  Vec res;
+  auto elapsed = runFFT(inp, res, func);
 
   bool passed =
     std::equal(res.begin(), res.end(), ans.begin(), ans.end(), isEq);
@@ -152,6 +159,22 @@ inline Vec ctParFFT(const Vec &inp)
     res[i] = res_even[i] + wiN * res_odd[i];
     res[i + hN] = res_even[i] - wiN * res_odd[i];
   }
+
+  return res;
+}
+
+Vec genData(
+  std::size_t N, std::function<Compl(Compl)> func = [](Compl val) {
+    return std::exp(Compl(0, 1) * val);
+  })
+{
+  std::vector<std::size_t> ks(N);
+  std::iota(ks.begin(), ks.end(), 0);
+  Vec res(N);
+  std::transform(ks.begin(), ks.end(), res.begin(), [func, N](auto k) {
+    Compl arg = -2.0 * M_PI * k / N;
+    return func(arg);
+  });
 
   return res;
 }

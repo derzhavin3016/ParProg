@@ -22,7 +22,7 @@ void outputVec(const Vec &vec, std::ostream &ost /* = std::cout*/)
 
 #define PRINT_FFT(inp, ans, func) testPrintFFT(inp, ans, func, #func)
 
-int main()
+int inputOutput()
 {
   using namespace fft;
 
@@ -49,4 +49,36 @@ int main()
     PRINT_FFT(inp, ans, naiveFFT);
   PRINT_FFT(inp, ans, ctFFT);
   PRINT_FFT(inp, ans, ctParFFT);
+
+  return 0;
+}
+
+template <std::forward_iterator It>
+void variate(It beg, It end)
+{
+  std::cout << "N,    TIME" << std::endl;
+  std::for_each(beg, end, [](auto size) {
+    fft::Vec inp = fft::genData(size);
+    fft::Vec res;
+    auto elapsed = fft::runFFT(inp, res, fft::ctParFFT);
+    std::cout << size << ", " << elapsed << std::endl;
+  });
+}
+
+int main()
+{
+#if defined(IN_OUT_MODE)
+  return inputOutput();
+#else
+  // [)
+  constexpr std::pair shift_range{12, 21};
+  std::array<std::size_t, shift_range.second - shift_range.first> sizes{};
+
+  std::size_t cur_shift = shift_range.first;
+  std::generate(sizes.begin(), sizes.end(),
+                [&cur_shift]() { return 1 << cur_shift++; });
+
+  variate(sizes.begin(), sizes.end());
+
+#endif
 }
