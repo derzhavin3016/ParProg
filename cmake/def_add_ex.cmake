@@ -31,6 +31,6 @@ endmacro()
 
 macro(AddDefMpiTar NAME)
   AddDefTarget(${NAME} ${ARGN})
-  target_include_directories(${NAME} PRIVATE SYSTEM ${MPI_CXX_INCLUDE_PATH})
+  target_include_directories(${NAME} SYSTEM PRIVATE ${MPI_CXX_INCLUDE_PATH} ${MPI_C_INCLUDE_PATH})
   target_link_libraries(${NAME} PRIVATE ${MPI_CXX_LIBRARIES})
 endmacro()
