@@ -24,7 +24,7 @@ using Vec = std::vector<Compl>;
 
 using FFTfunc = std::function<Vec(const Vec &)>;
 
-constexpr Dbl thres = std::numeric_limits<Dbl>::epsilon() * 1e7;
+constexpr Dbl thres = 1e-6;
 
 bool isZero(Compl a)
 {
@@ -44,7 +44,7 @@ inline std::pair<Dbl, bool> testFFT(const Vec &inp, const Vec &ans,
 {
   timer::Timer tim;
   auto res = func(inp);
-  auto elapsed = tim.elapsed_ms();
+  auto elapsed = tim.elapsed_mcs() / 1000.0l;
 
   bool passed =
     std::equal(res.begin(), res.end(), ans.begin(), ans.end(), isEq);

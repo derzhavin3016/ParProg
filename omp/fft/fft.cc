@@ -44,6 +44,6 @@ int main()
   }
 
 
-  PRINT_FFT(inp, ans, naiveFFT);
+  // PRINT_FFT(inp, ans, naiveFFT);
   PRINT_FFT(inp, ans, ctFFT);
 }
