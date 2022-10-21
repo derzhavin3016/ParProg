@@ -153,6 +153,7 @@ inline Vec ctParFFT(const Vec &inp)
   }
   Vec res(N);
 
+#pragma omp parallel for
   for (std::size_t i = 0; i < hN; ++i)
   {
     auto wiN = calcRot(i, N);
