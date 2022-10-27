@@ -49,6 +49,8 @@ int inputOutput()
     PRINT_FFT(inp, ans, naiveFFT);
   PRINT_FFT(inp, ans, ctFFT);
   PRINT_FFT(inp, ans, ctParFFT);
+  PRINT_FFT(inp, ans, ctFFTOpt);
+  PRINT_FFT(inp, ans, ctFFTParOpt);
 
   return 0;
 }
