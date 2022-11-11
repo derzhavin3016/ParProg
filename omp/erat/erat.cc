@@ -63,8 +63,12 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-#define CHECK_ERAT(num, func) checkPrint((num), (func), #func);
+#define CHECK_ERAT(num, func) checkPrint((num), (func), #func)
+#define CHECK_N_ERAT(func) CHECK_ERAT(N, func)
 
-  CHECK_ERAT(N, seqErat);
-  CHECK_ERAT(N, seqOddErat);
+  CHECK_N_ERAT(seqErat);
+  CHECK_N_ERAT(seqOddErat);
+
+#undef CHECK_ERAT
+#undef CHECK_N_ERAT
 }
