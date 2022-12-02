@@ -5,13 +5,14 @@
 #include <functional>
 #include <iostream>
 #include <string_view>
+#include <vector>
 
 #include "timer.hh"
 
-constexpr std::size_t ISIZE = 1000;
-constexpr std::size_t JSIZE = 1000;
+constexpr std::size_t ISIZE = 5000;
+constexpr std::size_t JSIZE = 5000;
 
-using ArrTy = std::array<std::array<double, JSIZE>, ISIZE>;
+using ArrTy = std::vector<std::vector<double>>;
 
 void printArr(const ArrTy &arr, std::ostream &ost)
 {
@@ -27,13 +28,35 @@ using ProcFunc = std::function<void(ArrTy &)>;
 
 void processArr(ArrTy &arr)
 {
+  // Original cycle
+  // for (std::size_t i = 0; i < ISIZE - 1; i++)
+  //   for (std::size_t j = 6; j < JSIZE; j++)
+  //     arr[i][j] = std::sin(0.2 * arr[i + 1][j - 6]);
+  // Normalized version
   for (std::size_t i = 0; i < ISIZE - 1; i++)
-    for (std::size_t j = 6; j < JSIZE; j++)
-      arr[i][j] = std::sin(0.2 * arr[i + 1][j - 6]);
+    for (std::size_t j = 0; j < JSIZE - 6; j++)
+      arr[i][j + 6] = std::sin(0.2 * arr[i + 1][j]);
 }
+// Check bernstein condition:
+// F(k1, k2) = (k1, k2 + 6)
+// G(l1, l2) = (l1 + 1, l2)
+// Have a system
+// k1 = l1 + 1
+// k2 + 6 = l2
+// => l = (k1 - 1, k2 + 6)
+// D = l - k = (-1, 6) => d = (>, <)
+// > ==> i anti-dependency
+// < ==> j true-dependency
 
 void processArrPar(ArrTy &arr)
-{}
+{
+  for (std::size_t i = 0; i < ISIZE - 1; i++)
+  {
+#pragma omp parallel for schedule(static, 6)
+    for (std::size_t j = 0; j < JSIZE - 6; j++)
+      arr[i][j + 6] = std::sin(0.2 * arr[i + 1][j]);
+  }
+}
 
 void measureDump(ProcFunc f, ArrTy &arr, std::string_view filename)
 {
@@ -54,14 +77,14 @@ void measureDump(ProcFunc f, ArrTy &arr, std::string_view filename)
 
 void initArr(ArrTy &a)
 {
+  a.resize(ISIZE);
   // Fill array with data
   for (std::size_t i = 0; i < a.size(); i++)
   {
     auto &ai = a[i];
+    ai.resize(JSIZE);
     for (std::size_t j = 0; j < ai.size(); j++)
-    {
       ai[j] = 10 * i + j;
-    }
   }
 }
 
@@ -70,11 +93,10 @@ int main()
   ArrTy a{};
   initArr(a);
 
-#if defined(SEQ_VER)
   std::cout << "Sequential:" << std::endl;
   measureDump(processArr, a, "seq.txt");
-#else
+
+  initArr(a);
   std::cout << "Parallel:" << std::endl;
   measureDump(processArrPar, a, "par.txt");
-#endif
 }
