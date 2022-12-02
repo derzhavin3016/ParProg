@@ -4,6 +4,7 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <omp.h>
 #include <string_view>
 #include <vector>
 
@@ -25,6 +26,14 @@ void printArr(const ArrTy &arr, std::ostream &ost)
 }
 
 using ProcFunc = std::function<void(ArrTy &)>;
+
+void ethalon(ArrTy &arr)
+{
+#pragma omp parallel for
+  for (std::size_t i = 0; i < ISIZE; i++)
+    for (std::size_t j = 0; j < JSIZE; j++)
+      arr[i][j] = std::sin(2 * arr[i][j]);
+}
 
 void processArr(ArrTy &arr)
 {
@@ -50,11 +59,13 @@ void processArr(ArrTy &arr)
 
 void processArrPar(ArrTy &arr)
 {
+#pragma omp parallel for schedule(static)
   for (std::size_t i = 0; i < ISIZE - 1; i++)
   {
+    auto arrnxt = arr[i + 1];
 #pragma omp parallel for schedule(static, 6)
     for (std::size_t j = 0; j < JSIZE - 6; j++)
-      arr[i][j + 6] = std::sin(0.2 * arr[i + 1][j]);
+      arr[i][j + 6] = std::sin(0.2 * arrnxt[j]);
   }
 }
 
@@ -99,4 +110,7 @@ int main()
   initArr(a);
   std::cout << "Parallel:" << std::endl;
   measureDump(processArrPar, a, "par.txt");
+  initArr(a);
+  std::cout << "Ethalon:" << std::endl;
+  measureDump(ethalon, a, "eth.txt");
 }
