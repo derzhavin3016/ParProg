@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <exception>
 #include <functional>
 #include <iostream>
 #include <numbers>
@@ -18,7 +19,8 @@
 using Numbers = std::vector<std::uint64_t>;
 using Sieve = std::vector<std::uint8_t>;
 using SieveIt = Sieve::iterator;
-using EratFunc = std::function<Numbers(std::uint64_t)>;
+using EratNaiveFunc = std::function<Numbers(std::uint64_t)>;
+using EratFunc = std::function<Sieve(std::uint64_t)>;
 
 inline Numbers makeNumbers(std::uint64_t num)
 {
@@ -109,7 +111,7 @@ inline void fillOddSieveRange(std::uint64_t from, std::uint64_t to,
   }
 }
 
-constexpr std::uint64_t SLICE_SZ = 4096 * 128; // 1024;
+constexpr std::uint64_t SLICE_SZ = 4096; // 1024;
 static_assert((SLICE_SZ & 1) == 0);
 
 inline Sieve parOddErat(std::uint64_t num)

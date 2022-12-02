@@ -20,7 +20,9 @@ bool isPrimes(const Numbers &numbers)
   return std::all_of(numbers.begin(), numbers.end(), isPrime);
 }
 
-std::pair<long double, Numbers> measure(std::uint64_t num, EratFunc func)
+template <typename T>
+std::pair<long double, Numbers> measure(std::uint64_t num, T func) requires
+  std::is_convertible_v<T, EratNaiveFunc> || std::is_convertible_v<T, EratFunc>
 {
   timer::Timer tim;
 
@@ -28,12 +30,21 @@ std::pair<long double, Numbers> measure(std::uint64_t num, EratFunc func)
 
   auto elapsed = tim.elapsed_mcs();
 
-  return {elapsed * 1e-3, res};
+  Numbers nums;
+  if constexpr (std::is_convertible_v<T, EratNaiveFunc>)
+    nums = std::move(res);
+  else if constexpr (std::is_convertible_v<T, EratFunc>)
+    nums = fromSieve(num, res);
+  else
+    throw std::runtime_error("");
+
+  return {elapsed * 1e-3, nums};
 }
 
-void checkPrint(std::uint64_t num, EratFunc func, std::string_view name)
+template <typename T>
+void checkPrint(std::uint64_t num, T func, std::string_view name)
 {
-  auto [ms, res] = measure(num, func);
+  auto [ms, res] = measure<T>(num, func);
   bool isSeq = name == "seqErat";
   if (isSeq)
     seqEr_res = res;
