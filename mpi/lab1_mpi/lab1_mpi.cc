@@ -26,6 +26,31 @@ void printArr(const ArrTy &arr, std::ostream &ost)
 
 using ProcFunc = std::function<void(ArrTy &)>;
 
+void ethalon(ArrTy &arr)
+{
+  auto rank = MPI::COMM_WORLD.Get_rank();
+  auto commsize = MPI::COMM_WORLD.Get_size();
+
+  for (std::size_t i = rank; i < ISIZE; i += commsize)
+    for (std::size_t j = 0; j < JSIZE; j++)
+      arr[i][j] = std::sin(2 * arr[i][j]);
+
+  for (std::size_t i = rank; i < ISIZE; i += commsize)
+  {
+    if (rank != 0)
+    {
+      MPI::COMM_WORLD.Send(arr[i].data(), ISIZE, MPI::DOUBLE, 0,
+                           static_cast<int>(i));
+      continue;
+    }
+
+    for (std::size_t id = 1; static_cast<int>(id) < commsize; ++id)
+      if (i + id < ISIZE)
+        MPI::COMM_WORLD.Recv(arr[i + id].data(), ISIZE, MPI::DOUBLE, id,
+                             static_cast<int>(i + id));
+  }
+}
+
 void processArr(ArrTy &arr)
 {
   // Original cycle
@@ -161,6 +186,16 @@ void doPar()
   measureDump(processArrPar, a, "par.txt", printTArr);
 }
 
+void doEth()
+{
+  ArrTy a{};
+  initArr(a);
+
+  if (MPI::COMM_WORLD.Get_rank() == 0)
+    std::cout << "Parallel:" << std::endl;
+  measureDump(ethalon, a, "eth.txt", printArr);
+}
+
 int main(int argc, char *argv[])
 {
   MPI::Init(argc, argv);
@@ -169,7 +204,7 @@ int main(int argc, char *argv[])
   if (commsz == 1)
     doSeq();
   else if (commsz == 3)
-    doPar();
+    doPar(), doEth();
   else if (MPI::COMM_WORLD.Get_rank() == 0)
     std::cerr << "Commsize is not right " << commsz << " (required 3)"
               << std::endl;
