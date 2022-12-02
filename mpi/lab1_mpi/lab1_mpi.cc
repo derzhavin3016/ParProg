@@ -44,7 +44,7 @@ void processArr(ArrTy &arr)
 // k1 + 1 = l1
 // k2 + 3 = l2
 // => l = (k1 + 1, k2 + 3)
-// D = l - k = (1, 6) => d = (<, <)
+// D = l - k = (1, 3) => d = (<, <)
 // < ==> i true-dependency
 // < ==> j true-dependency
 
