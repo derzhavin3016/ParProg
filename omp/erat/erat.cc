@@ -1,5 +1,7 @@
 #include "erat.hh"
 
+Numbers seqEr_res{};
+
 bool isPrime(std::uint64_t num)
 {
   if (num == 1)
@@ -26,15 +28,18 @@ std::pair<long double, Numbers> measure(std::uint64_t num, EratFunc func)
 
   auto elapsed = tim.elapsed_mcs();
 
-  return {elapsed / 1000.0l, res};
+  return {elapsed * 1e-3, res};
 }
 
 void checkPrint(std::uint64_t num, EratFunc func, std::string_view name)
 {
   auto [ms, res] = measure(num, func);
-  bool passed = isPrimes(res);
+  bool isSeq = name == "seqErat";
+  if (isSeq)
+    seqEr_res = res;
+  bool passed = isSeq ? isPrimes(res) : seqEr_res == res;
 
-  if (num < 20)
+  if (num < 2000)
   {
     std::for_each(res.begin(), res.end(),
                   [](auto n) { std::cout << n << " "; });
@@ -68,6 +73,7 @@ int main(int argc, char *argv[])
 
   CHECK_N_ERAT(seqErat);
   CHECK_N_ERAT(seqOddErat);
+  CHECK_N_ERAT(parOddErat);
 
 #undef CHECK_ERAT
 #undef CHECK_N_ERAT
