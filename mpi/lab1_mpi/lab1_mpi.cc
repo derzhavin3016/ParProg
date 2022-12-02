@@ -192,7 +192,7 @@ void doEth()
   initArr(a);
 
   if (MPI::COMM_WORLD.Get_rank() == 0)
-    std::cout << "Parallel:" << std::endl;
+    std::cout << "Ethalon:" << std::endl;
   measureDump(ethalon, a, "eth.txt", printArr);
 }
 
