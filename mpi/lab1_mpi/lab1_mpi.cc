@@ -53,23 +53,29 @@ void processArrPar(ArrTy &arr)
   auto rank = MPI::COMM_WORLD.Get_rank();
   auto commsize = MPI::COMM_WORLD.Get_size();
 
-  for (std::size_t i = rank; i < JSIZE - 4; i += commsize)
+  constexpr auto JSIZE_USED = JSIZE - 4;
+
+  for (std::size_t i = rank; i < JSIZE_USED; i += commsize)
     for (std::size_t j = 0; j < ISIZE - 1; j++)
       arr[i + 3][j + 1] = std::sin(2 * arr[i][j]);
 
-  for (std::size_t i = rank; i < JSIZE - 4; i += commsize)
+  // auto jsizeFilled = JSIZE_USED + (commsize - JSIZE_USED % commsize) %
+  // commsize;
+
+  for (std::size_t i = rank; i < JSIZE_USED; i += commsize)
   {
+    auto idx = i + 3;
     if (rank != 0)
     {
-      MPI::COMM_WORLD.Send(arr[i].data() + 1, ISIZE - 1, MPI::DOUBLE, 0,
-                           static_cast<int>(i));
+      MPI::COMM_WORLD.Send(arr[idx].data() + 1, ISIZE - 1, MPI::DOUBLE, 0,
+                           static_cast<int>(idx));
       continue;
     }
 
     for (std::size_t id = 1; static_cast<int>(id) < commsize; ++id)
-      if (i + id < JSIZE - 4)
-        MPI::COMM_WORLD.Recv(arr[i + id].data() + 1, ISIZE - 1, MPI::DOUBLE, id,
-                             static_cast<int>(i + id));
+      if (i + id < JSIZE_USED)
+        MPI::COMM_WORLD.Recv(arr[idx + id].data() + 1, ISIZE - 1, MPI::DOUBLE,
+                             id, static_cast<int>(idx + id));
   }
 }
 
